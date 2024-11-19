@@ -1,9 +1,7 @@
 import streamlit as st
-import git
 import os
 import subprocess
-import pandas as pd  # Import pandas
-from git import Repo
+import pandas as pd
 
 # Set up the app title
 st.title("TTS MOS Evaluation")
@@ -36,8 +34,9 @@ audio_dir = "audio_files"  # Replace with your audio file directory
 # List all audio files
 audio_files = sorted([f for f in os.listdir(audio_dir) if f.endswith('.mp3') or f.endswith('.wav')])
 
-# Initialize scores dictionary
-scores = {}
+# Initialize scores dictionary in session state if it doesn't exist
+if 'scores' not in st.session_state:
+    st.session_state.scores = {}
 
 # Loop through and display each audio file
 for audio_file in audio_files:
@@ -47,50 +46,23 @@ for audio_file in audio_files:
 
     # Rating slider
     score = st.slider(f"Rate {audio_file}", min_value=1, max_value=5, key=audio_file)
-    scores[audio_file] = score
+    st.session_state.scores[audio_file] = score
 
 # Submit button
 if st.button("Submit Ratings"):
-    # Path to your cloned GitHub repository
-    repo_path = './mizotts'  # This assumes the repo is cloned into the current working directory
+    # Convert the stored ratings to a DataFrame
+    df = pd.DataFrame(list(st.session_state.scores.items()), columns=['Audio', 'Rating'])
 
-    # Initialize Git repository
-    try:
-        repo = git.Repo(repo_path)
-    except git.exc.NoSuchPathError:
-        st.error(f"Git repository not found at {repo_path}. Please check the path.")
-    
-    # Create a DataFrame from the ratings
-    df = pd.DataFrame(list(scores.items()), columns=['Audio', 'Rating'])
-    
-    # Define the path for ratings.csv in the repository
-    ratings_file = os.path.join(repo_path, 'ratings.csv')
+    # Display the ratings on the page
+    st.write("### Submitted Ratings")
+    st.write(df)
 
-    # Check if the directory exists, if not, create it
-    ratings_dir = os.path.dirname(ratings_file)
-    if not os.path.exists(ratings_dir):
-        os.makedirs(ratings_dir)
-
-    # If ratings.csv doesn't exist, create it with headers
-    if not os.path.exists(ratings_file):
-        df.to_csv(ratings_file, index=False)
-    else:
-        # Append new ratings to the existing file
+    # Optionally, save ratings to a CSV file (local to the app)
+    ratings_file = 'ratings.csv'
+    if os.path.exists(ratings_file):
         df.to_csv(ratings_file, mode='a', header=False, index=False)
-        
-    # Configure Git user settings with your credentials
-    repo.git.config('--global', 'user.name', 'andrewzoa')
-    repo.git.config('--global', 'user.email', 'andrew.cse.mtech@nitmz.ac.in')
+    else:
+        df.to_csv(ratings_file, index=False)
 
-    # Add your GitHub Classic Token here for authentication
-    token = "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"
-    repo_url_with_token = f"https://{token}@github.com/andrewzoa/mizotts.git"
+    st.success("Thank you for your feedback! Ratings have been saved locally.")
 
-    # Stage, commit, and push changes using the token
-    try:
-        repo.git.add('ratings.csv')
-        repo.git.commit('-m', 'Update ratings')
-        repo.git.push(repo_url_with_token, 'main')  # Use token for authentication in push
-        st.success("Thank you for your feedback! Ratings saved and pushed to GitHub!")
-    except Exception as e:
-        st.error(f"Error pushing to GitHub: {e}")
