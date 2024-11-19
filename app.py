@@ -76,7 +76,9 @@ if st.button("Submit Ratings"):
     else:
         # Append new ratings to the existing file
         df.to_csv(ratings_file, mode='a', header=False, index=False)
-
+        
+    repo.git.config('--global', 'user.name', 'Your Name')
+    repo.git.config('--global', 'user.email', 'your-email@example.com')
     # Stage, commit, and push changes
     try:
         repo.git.add('ratings.csv')
