@@ -31,11 +31,14 @@ for audio_file in audio_files:
 # Submit button
 if st.button("Submit Ratings"):
     # Path to your cloned GitHub repository
-    repo_path = '/mizotts'  # Change this to your local repository path
+    repo_path = '/path/to/your/local/repo/mizotts'  # Adjust this to your local repository path
 
     # Initialize Git repository
-    repo = git.Repo(repo_path)
-
+    try:
+        repo = git.Repo(repo_path)
+    except git.exc.NoSuchPathError:
+        st.error(f"Git repository not found at {repo_path}. Please check the path.")
+    
     # Create a DataFrame from the ratings
     df = pd.DataFrame(list(scores.items()), columns=['Audio', 'Rating'])
     
@@ -50,8 +53,10 @@ if st.button("Submit Ratings"):
         df.to_csv(ratings_file, mode='a', header=False, index=False)
 
     # Stage, commit, and push changes
-    repo.git.add('ratings.csv')
-    repo.git.commit('-m', 'Update ratings')
-    repo.git.push('origin', 'main')
-
-    st.success("Thank you for your feedback! Ratings saved and pushed to GitHub!")
+    try:
+        repo.git.add('ratings.csv')
+        repo.git.commit('-m', 'Update ratings')
+        repo.git.push('origin', 'main')
+        st.success("Thank you for your feedback! Ratings saved and pushed to GitHub!")
+    except Exception as e:
+        st.error(f"Error pushing to GitHub: {e}")
