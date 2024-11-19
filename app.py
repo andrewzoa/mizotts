@@ -2,6 +2,7 @@ import streamlit as st
 import git
 import os
 import subprocess
+import pandas as pd  # Import pandas
 
 # Set up the app title
 st.title("TTS MOS Evaluation")
