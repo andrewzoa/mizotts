@@ -3,6 +3,7 @@ import git
 import os
 import subprocess
 import pandas as pd  # Import pandas
+from git import Repo
 
 # Set up the app title
 st.title("TTS MOS Evaluation")
@@ -81,11 +82,15 @@ if st.button("Submit Ratings"):
     repo.git.config('--global', 'user.name', 'andrewzoa')
     repo.git.config('--global', 'user.email', 'andrew.cse.mtech@nitmz.ac.in')
 
-    # Stage, commit, and push changes
+    # Add your GitHub Classic Token here for authentication
+    token = "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"
+    repo_url_with_token = f"https://{token}@github.com/andrewzoa/mizotts.git"
+
+    # Stage, commit, and push changes using the token
     try:
         repo.git.add('ratings.csv')
         repo.git.commit('-m', 'Update ratings')
-        repo.git.push('origin', 'main')
+        repo.git.push(repo_url_with_token, 'main')  # Use token for authentication in push
         st.success("Thank you for your feedback! Ratings saved and pushed to GitHub!")
     except Exception as e:
         st.error(f"Error pushing to GitHub: {e}")
