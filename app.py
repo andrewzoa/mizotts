@@ -1,7 +1,7 @@
 import streamlit as st
-import os
 import git
-import pandas as pd
+import os
+import subprocess
 
 # Set up the app title
 st.title("TTS MOS Evaluation")
@@ -9,7 +9,26 @@ st.title("TTS MOS Evaluation")
 # Instructions for participants
 st.write("Please listen to the audio samples below and rate them on a scale of 1 (Bad) to 5 (Excellent).")
 
-# Directory containing audio files
+# Function to clone the repository (if not already cloned)
+def clone_repo():
+    repo_url = "https://github.com/andrewzoa/mizotts.git"  # Your repo URL
+    repo_dir = "mizotts"  # Local directory where the repo should be cloned
+
+    if not os.path.exists(repo_dir):
+        st.write(f"Cloning repository from {repo_url}...")
+        try:
+            # Clone the repository if it doesn't exist
+            subprocess.run(['git', 'clone', repo_url, repo_dir], check=True)
+            st.success("Repository cloned successfully!")
+        except Exception as e:
+            st.error(f"Error cloning repository: {e}")
+    else:
+        st.write(f"Repository already cloned at {repo_dir}.")
+
+# Clone repository at the start
+clone_repo()
+
+# Directory containing audio files (adjust as necessary)
 audio_dir = "audio_files"  # Replace with your audio file directory
 
 # List all audio files
@@ -31,7 +50,7 @@ for audio_file in audio_files:
 # Submit button
 if st.button("Submit Ratings"):
     # Path to your cloned GitHub repository
-    repo_path = '/path/to/your/local/repo/mizotts'  # Adjust this to your local repository path
+    repo_path = './mizotts'  # This assumes the repo is cloned into the current working directory
 
     # Initialize Git repository
     try:
@@ -44,6 +63,11 @@ if st.button("Submit Ratings"):
     
     # Define the path for ratings.csv in the repository
     ratings_file = os.path.join(repo_path, 'ratings.csv')
+
+    # Check if the directory exists, if not, create it
+    ratings_dir = os.path.dirname(ratings_file)
+    if not os.path.exists(ratings_dir):
+        os.makedirs(ratings_dir)
 
     # If ratings.csv doesn't exist, create it with headers
     if not os.path.exists(ratings_file):
